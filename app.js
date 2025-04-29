@@ -18,12 +18,24 @@ app.get("/stop", (req, res) => {
     const seconds = diff / 1000;
     res.send({ diff: diff, seconds: seconds });
 });
-
+let isFishing;
 function startFish(socket) {
     socket.emit("FishingStarted");
+
     socket.on("catch", (data) => {
         console.log("Fish?");
     });
+
+    scheduleFish(socket);
+}
+
+function scheduleFish(socket) {
+    if (!isFishing) return;
+    socket.emit("FishOnHook");
+    const nextFishTimeout = setTimeout(() => {
+        console.log("hello");
+        scheduleFish(socket);
+    }, 2000);
 }
 
 const sessions = new Set();
