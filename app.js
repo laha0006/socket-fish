@@ -9,6 +9,10 @@ const io = new Server(server);
 io.on("connection", (socket) => {
     console.log("A socket connected", socket.id);
 
+    socket.on("custom", (data) => {
+        console.log(`custom: ${data}`);
+    });
+
     socket.on("disconnect", () => {
         console.log("A Socket disconnected", socket.id);
     });
