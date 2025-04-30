@@ -1,6 +1,10 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import {
+    registerFishingHandlers,
+    fishingSessions,
+} from "./socket/fishing/fishingHandlers.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -18,43 +22,18 @@ app.get("/stop", (req, res) => {
     const seconds = diff / 1000;
     res.send({ diff: diff, seconds: seconds });
 });
-let isFishing;
-function startFish(socket) {
-    socket.emit("FishingStarted");
-
-    socket.on("catch", (data) => {
-        console.log("Fish?");
-    });
-
-    scheduleFish(socket);
-}
-
-function scheduleFish(socket) {
-    if (!isFishing) return;
-    socket.emit("FishOnHook");
-    const nextFishTimeout = setTimeout(() => {
-        console.log("hello");
-        scheduleFish(socket);
-    }, 2000);
-}
-
-const sessions = new Set();
 
 io.on("connection", (socket) => {
     console.log("A socket connected", socket.id);
 
-    socket.on("custom", (data) => {
-        console.log("custom!!");
-        if (sessions.has(socket.id)) {
-            console.log("return");
-            return;
-        }
-        sessions.add(socket.id);
-        startFish(socket);
-    });
+    registerFishingHandlers(socket);
 
     socket.on("disconnect", () => {
         console.log("A Socket disconnected", socket.id);
+        const deleted = fishingSessions.delete(socket.id);
+        if (deleted) {
+            console.log("deleted fishing session succesfully");
+        }
     });
 });
 
