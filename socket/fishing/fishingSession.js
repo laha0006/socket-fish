@@ -38,7 +38,7 @@ function fishOnHook(session) {
 }
 
 function sendQTE(session) {
-    if (!session.isFishing || session.isFishOnHook) return;
+    if (!session.isFishing || !session.isQTE) return false;
     session.isQTE = true;
     session.startQteTime = Date.now();
     session.socket.emit("QTE");
@@ -49,6 +49,7 @@ function sendQTE(session) {
             scheduleNextFish(session);
         }
     }, 2500);
+    return true;
 }
 
 export function qteComplete(session) {
@@ -66,12 +67,16 @@ export function catchFish(session) {
     clearTimeout(session.hookTimeout);
     session.isFishOnHook = false;
     session.socket.emit("FishCaught");
-    sendQTE(session);
-    // scheduleNextFish(session);
+    const sent = sendQTE(session);
+    if (!sent) {
+        session.socket.emit("FishEscaped");
+        scheduleNextFish(session);
+    }
 }
 
 export function stopFishing(session) {
     session.isFishing = false;
     clearTimeout(session.fishingTimer);
     clearTimeout(session.hookTimeout);
+    clearTimeout(session.qteTimer);
 }
