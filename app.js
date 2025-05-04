@@ -8,7 +8,12 @@ import {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Allow all origins
+        methods: ["GET", "POST"],
+    },
+});
 let playerStartFishing;
 app.get("/start", (req, res) => {
     const now = Date.now();
@@ -37,4 +42,4 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(3000);
+server.listen(4000);

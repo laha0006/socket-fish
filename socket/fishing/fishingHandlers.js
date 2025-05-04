@@ -3,6 +3,7 @@ import {
     startFishing,
     stopFishing,
     catchFish,
+    qteComplete,
 } from "./fishingSession.js";
 
 export const fishingSessions = new Map();
@@ -22,6 +23,12 @@ export function registerFishingHandlers(socket) {
         const session = fishingSessions.get(socket.id);
 
         catchFish(session);
+    });
+
+    socket.on("qteComplete", () => {
+        const session = fishingSessions.get(socket.id);
+
+        qteComplete(session);
     });
 
     socket.on("stopFishing", () => {

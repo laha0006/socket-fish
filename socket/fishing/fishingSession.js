@@ -3,6 +3,8 @@ export function createFishingSession(socket) {
         socket,
         isFishing: false,
         isFishOnHook: false,
+        isQTE: false,
+        qteTimer: null,
         fishingTimer: null,
         hookTimeout: null,
     };
@@ -15,7 +17,7 @@ export function startFishing(session) {
 }
 
 function scheduleNextFish(session) {
-    const delay = Math.random() * 5000 + 2000;
+    const delay = Math.random() * 2000 + 2000;
     session.fishingTimer = setTimeout(() => {
         fishOnHook(session);
     }, delay);
@@ -32,7 +34,30 @@ function fishOnHook(session) {
             session.socket.emit("FishEscaped");
             scheduleNextFish(session);
         }
-    }, 5000);
+    }, 1100);
+}
+
+function sendQTE(session) {
+    console.log("BEFORE SEND QTE");
+    if (!session.isFishing || session.isFishOnHook) return;
+    console.log("AFTER?");
+    session.isQTE = true;
+    session.socket.emit("QTE");
+    session.qteTimer = setTimeout(() => {
+        if (session.isQTE) {
+            session.isQTE = false;
+            session.socket.emit("FishEscaped");
+            scheduleNextFish(session);
+        }
+    }, 2500);
+}
+
+export function qteComplete(session) {
+    if (!session.isFishing || !session.isQTE) return;
+    clearTimeout(session.qteTimer);
+    session.isQTE = false;
+    session.socket.emit("QTESuccess");
+    scheduleNextFish(session);
 }
 
 export function catchFish(session) {
@@ -40,7 +65,8 @@ export function catchFish(session) {
     clearTimeout(session.hookTimeout);
     session.isFishOnHook = false;
     session.socket.emit("FishCaught");
-    scheduleNextFish(session);
+    sendQTE(session);
+    // scheduleNextFish(session);
 }
 
 export function stopFishing(session) {
