@@ -34,14 +34,13 @@ function fishOnHook(session) {
             session.socket.emit("FishEscaped");
             scheduleNextFish(session);
         }
-    }, 1100);
+    }, 600);
 }
 
 function sendQTE(session) {
-    console.log("BEFORE SEND QTE");
     if (!session.isFishing || session.isFishOnHook) return;
-    console.log("AFTER?");
     session.isQTE = true;
+    session.startQteTime = Date.now();
     session.socket.emit("QTE");
     session.qteTimer = setTimeout(() => {
         if (session.isQTE) {
@@ -55,6 +54,8 @@ function sendQTE(session) {
 export function qteComplete(session) {
     if (!session.isFishing || !session.isQTE) return;
     clearTimeout(session.qteTimer);
+    const completeTime = Date.now();
+    console.log(completeTime - session.startQteTime);
     session.isQTE = false;
     session.socket.emit("QTESuccess");
     scheduleNextFish(session);
