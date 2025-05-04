@@ -38,7 +38,7 @@ function fishOnHook(session) {
 }
 
 function sendQTE(session) {
-    if (!session.isFishing || !session.isQTE) return false;
+    if (!session.isFishing || session.isQTE) return false;
     session.isQTE = true;
     session.startQteTime = Date.now();
     session.socket.emit("QTE");
@@ -68,6 +68,7 @@ export function catchFish(session) {
     session.isFishOnHook = false;
     session.socket.emit("FishCaught");
     const sent = sendQTE(session);
+    console.log("sent:", sent);
     if (!sent) {
         session.socket.emit("FishEscaped");
         scheduleNextFish(session);
