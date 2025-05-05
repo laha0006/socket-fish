@@ -1,10 +1,8 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import {
-    registerFishingHandlers,
-    fishingSessions,
-} from "./socket/fishing/fishingHandlers.js";
+import { registerFishingHandlers } from "./socket/fishing/fishingHandlers.js";
+import { fishingSessions } from "./socket/fishing/fishingSession.js";
 
 const app = express();
 const server = http.createServer(app);

@@ -1,10 +1,49 @@
-export function createFishingSession(socket) {
+const FishingState = Object.freeze({
+    IDLE: "Idle",
+    FISHING: "Fishing",
+    WAITING_FOR_BITE: "WaitingForBite",
+    HOOKED: "Hooked",
+    QTE: "Qte",
+});
+
+export const FishingEvent = Object.freeze({
+    START_FISHING: "startFishing",
+    STOP_FISHING: "stopFishing",
+    QTE_COMPLETE: "qteComplete",
+    CATCH_FISH: "catchFish",
+});
+
+export const fishingSessions = new Map();
+
+export function dispatch(event, socket) {
+    let session = fishingSessions.get(socket.id);
+    if (!session) {
+        session = createFishingSession(socket);
+        fishingSessions.set(socket.id, session);
+    }
+
+    switch (event) {
+        case FishingEvent.START_FISHING:
+            startFishing(session);
+            break;
+        case FishingEvent.STOP_FISHING:
+            stopFishing(session);
+            break;
+        case FishingEvent.CATCH_FISH:
+            catchFish(session);
+            break;
+        case FishingEvent.QTE_COMPLETE:
+            qteComplete(session);
+            break;
+        default:
+            console.log("unknown event:", event);
+    }
+}
+
+function createFishingSession(socket) {
     return {
         socket,
         fishingState: FishingState.IDLE,
-        isFishing: false,
-        isFishOnHook: false,
-        isQTE: false,
         qteTimer: null,
         fishingTimer: null,
         hookTimeout: null,
@@ -14,15 +53,7 @@ export function createFishingSession(socket) {
     };
 }
 
-const FishingState = Object.freeze({
-    IDLE: "Idle",
-    FISHING: "Fishing",
-    WAITING_FOR_BITE: "WaitingForBite",
-    HOOKED: "Hooked",
-    QTE: "Qte",
-});
-
-export function startFishing(session) {
+function startFishing(session) {
     if (session.fishingState != FishingState.IDLE) return;
 
     session.fishingState = FishingState.FISHING;
@@ -79,7 +110,7 @@ function sendQTE(session) {
     return true;
 }
 
-export function qteComplete(session) {
+function qteComplete(session) {
     if (session.fishingState != FishingState.QTE) return;
 
     session.missCount = 0;
@@ -96,7 +127,7 @@ export function qteComplete(session) {
     scheduleNextFish(session);
 }
 
-export function catchFish(session) {
+function catchFish(session) {
     if (session.fishingState != FishingState.HOOKED) return;
 
     clearTimeout(session.hookTimeout);
@@ -113,7 +144,7 @@ export function catchFish(session) {
     }
 }
 
-export function stopFishing(session) {
+function stopFishing(session) {
     session.fishingState = FishingState.IDLE;
 
     clearTimeout(session.fishingTimer);
