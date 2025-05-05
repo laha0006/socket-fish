@@ -28,6 +28,10 @@ app.get("/stop", (req, res) => {
     res.send({ diff: diff, seconds: seconds });
 });
 
+// io.use((socket, next) => {
+//     console.log(socket);
+// });
+
 io.on("connection", (socket) => {
     console.log("A socket connected", socket.id);
 
